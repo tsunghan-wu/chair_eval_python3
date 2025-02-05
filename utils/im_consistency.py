@@ -4,7 +4,7 @@ import pickle as pkl
 import pdb
 import numpy as np
 from nltk import word_tokenize
-from pattern.en import singularize
+from pattern3.en import singularize
 import nltk
 import argparse
 from misc import *
@@ -60,4 +60,4 @@ if __name__ == '__main__':
     consistency = get_im_consistency(hallucination_by_imid, 
                                      predicted_label_dict, 
                                      gt_label_dict)
-    print "Im consistency is: %0.04f" %consistency
+    print ("Im consistency is: %0.04f" %consistency)

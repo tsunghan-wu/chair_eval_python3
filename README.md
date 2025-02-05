@@ -1,5 +1,11 @@
 # Object Hallucination in Image Captioning
 
+The Python 3 Reproduction of [CHAIR](https://github.com/LisaAnne/Hallucination), an image hallucination benchmark.
+
+License: BSD 2-Clause license
+
+## Acknowledgement:
+
 Rohrbach*, Anna and Hendricks*, Lisa Anne, et al. "Object Hallucination in Image Captioning." EMNLP (2018).
 
 Find the paper [here](https://arxiv.org/pdf/1809.02156.pdf).
@@ -11,8 +17,6 @@ Find the paper [here](https://arxiv.org/pdf/1809.02156.pdf).
         year = {2018} 
 }
 ```
-
-License: BSD 2-Clause license
 
 ## Running the Code
 

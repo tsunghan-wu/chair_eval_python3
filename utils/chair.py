@@ -2,7 +2,7 @@ import sys
 from nltk.stem import *
 import nltk
 import json
-from pattern.en import singularize
+from pattern3.en import singularize
 import argparse
 from misc import *
 
@@ -23,6 +23,16 @@ def combine_coco_captions(annotation_path):
                 'annotations': val_caps['annotations'] + train_caps['annotations']}
 
     return all_caps 
+
+
+def print_metrics(hallucination_cap_dict, quiet=False):
+    sentence_metrics = hallucination_cap_dict['overall_metrics']
+    metric_string = "%0.01f\t%0.01f" %(sentence_metrics['CHAIRs']*100,
+                                       sentence_metrics['CHAIRi']*100)
+
+    if not quiet:
+        print ("CHAIR\tCHAIRi")
+        print (metric_string)
 
 def combine_coco_instances(annotation_path):
 
@@ -154,7 +164,7 @@ class CHAIR(object):
             if imid in self.imid_to_objects:
                 node_word = self.inverse_synonym_dict[id_to_name[annotation['category_id']]]
                 self.imid_to_objects[imid].append(node_word)
-        print "\n"
+        print ("\n")
         for imid in self.imid_to_objects:
             self.imid_to_objects[imid] = set(self.imid_to_objects[imid])
 
@@ -173,7 +183,7 @@ class CHAIR(object):
             if imid in self.imid_to_objects:
                 _, node_words, _, _ = self.caption_to_words(annotation['caption'])
                 self.imid_to_objects[imid].update(node_words)
-        print "\n"
+        print ("\n")
 
         for imid in self.imid_to_objects:
             self.imid_to_objects[imid] = set(self.imid_to_objects[imid])
@@ -204,7 +214,6 @@ class CHAIR(object):
         coco_word_count = 0.
 
         output = {'sentences': []} 
-    
         for i, cap_eval in enumerate(caps):
     
             cap = cap_eval['caption']
@@ -223,15 +232,7 @@ class CHAIR(object):
                         'words': raw_words 
                         }
    
-            cap_dict['metrics'] = {'Bleu_1': cap_eval['Bleu_1'],
-                                   'Bleu_2': cap_eval['Bleu_2'],
-                                   'Bleu_3': cap_eval['Bleu_3'],
-                                   'Bleu_4': cap_eval['Bleu_4'],
-                                   'METEOR': cap_eval['METEOR'],
-                                   'CIDEr': cap_eval['CIDEr'],
-                                   'SPICE': cap_eval['SPICE'],
-                                   'ROUGE_L': cap_eval['ROUGE_L'],
-                                   'CHAIRs': 0,
+            cap_dict['metrics'] = {'CHAIRs': 0,
                                    'CHAIRi': 0}
  
             #count hallucinated words
@@ -259,15 +260,7 @@ class CHAIR(object):
         chair_s = (num_hallucinated_caps/num_caps)
         chair_i = (hallucinated_word_count/coco_word_count)
     
-        output['overall_metrics'] = {'Bleu_1': self.metrics['Bleu_1'],
-                                     'Bleu_2': self.metrics['Bleu_2'],
-                                     'Bleu_3': self.metrics['Bleu_3'],
-                                     'Bleu_4': self.metrics['Bleu_4'],
-                                     'METEOR': self.metrics['METEOR'],
-                                     'CIDEr': self.metrics['CIDEr'],
-                                     'SPICE': self.metrics['SPICE'],
-                                     'ROUGE_L': self.metrics['ROUGE_L'],
-                                     'CHAIRs': chair_s,
+        output['overall_metrics'] = {'CHAIRs': chair_s,
                                      'CHAIRi': chair_i}
     
         return output 
@@ -284,38 +277,21 @@ def load_generated_captions(cap_file):
 
    return caps, imids, metrics
 
-def save_hallucinated_words(cap_file, cap_dict): 
-    tag = cap_file.split('/')[-1] 
-    with open('output/hallucination/hallucinated_words_%s' %tag, 'w') as f:
-        json.dump(cap_dict, f)
-
-def print_metrics(hallucination_cap_dict, quiet=False):
-    sentence_metrics = hallucination_cap_dict['overall_metrics']
-    metric_string = "%0.01f\t%0.01f\t%0.01f\t%0.01f\t%0.01f" %(
-                                                  sentence_metrics['SPICE']*100,
-                                                  sentence_metrics['METEOR']*100,
-                                                  sentence_metrics['CIDEr']*100,
-                                                  sentence_metrics['CHAIRs']*100,
-                                                  sentence_metrics['CHAIRi']*100)
-
-    if not quiet:
-        print "SPICE\tMETEOR\tCIDEr\tCHAIRs\tCHAIRi"
-        print metric_string
-
-    else:
-        return metric_string
  
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--cap_file", type=str, default='')
     parser.add_argument("--annotation_path", type=str, default='coco/annotations')
+    parser.add_argument("--output_file", type=str, default='output/hallucinated_words.json')
     args = parser.parse_args()
 
     _, imids, _ = load_generated_captions(args.cap_file)
 
-    evaluator = CHAIR(imids, args.coco_path) 
+    evaluator = CHAIR(imids, args.annotation_path) 
     evaluator.get_annotations()
     cap_dict = evaluator.compute_chair(args.cap_file) 
     
     print_metrics(cap_dict)
-    save_hallucinated_words(args.cap_file, cap_dict)
+    os.makedirs(os.path.dirname(os.path.expanduser(args.output_file)), exist_ok=True)
+    with open(args.output_file, 'w') as f:
+        json.dump(cap_dict, f)

@@ -5,7 +5,7 @@ import os
 import pickle as pkl
 from nltk import word_tokenize
 from collections import defaultdict
-from pattern.en import singularize
+from pattern3.en import singularize
 import pdb
 import sys
 import argparse
@@ -75,4 +75,4 @@ if __name__ == '__main__':
     consistency = get_lm_consistency(hallucination_by_imid, \
                                      blank_lm_predictions, \
                                      word_to_idx)
-    print "\nConsistency: %0.04f" %consistency
+    print ("\nConsistency: %0.04f" %consistency)
